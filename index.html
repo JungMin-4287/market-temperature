@@ -359,6 +359,12 @@ function renderHist(n) {
   let tp = '', on = false;
   H.forEach((r, i) => { if (r[1] == null) { on = false; return; } tp += (on ? 'L' : 'M') + X(i).toFixed(1) + ' ' + Yt(r[1]).toFixed(1); on = true; });
   const last = H[H.length - 1];
+  // 지금 위치 가로선: 온도(구간 색)와 코스피(잉크색), 왼쪽 끝에 값 표시
+  const nowLine = (y, color, text) => `<line x1="${L}" x2="${W - R}" y1="${y}" y2="${y}" stroke="${color}" stroke-width="1.3" stroke-dasharray="7 4"/>
+    <rect x="${L + 4}" y="${y - 17}" width="${text.length * 7 + 14}" height="15" rx="3" fill="var(--panel)" opacity=".85"/>
+    <text x="${L + 10}" y="${y - 5}" style="fill:${color};font-weight:600">${text}</text>`;
+  g += nowLine(Yk(last[6]), 'var(--ink)', `지금 ${last[6].toLocaleString()}`);
+  if (last[1] != null) g += nowLine(Yt(last[1]), col(last[1]), `지금 ${f1(last[1])}`);
   g += `<path d="${kp}" fill="none" stroke="var(--ink)" stroke-width="1.4"/>`;
   g += `<path d="${tp}" fill="none" stroke="var(--accent)" stroke-width="1.4"/>`;
   g += `<circle cx="${X(H.length - 1)}" cy="${Yt(last[1])}" r="3.5" fill="${col(last[1])}" stroke="var(--panel)" stroke-width="1.5"/>`;
