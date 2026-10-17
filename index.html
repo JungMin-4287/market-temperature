@@ -11,7 +11,7 @@
 <style>
 /* 레이아웃: 맨 위 '오늘의 눈금'(온도계 막대 + 한 줄 판정 + 지금 할 일) → 지표판 → 이력 → 검증 → 다른 시장 → 계산법. 한 열, 최대 1080px */
 :root {
-  --bg: #f3f5f7; --panel: #ffffff; --ink: #18202b; --sub: #5b6676; --line: #dde3ea; --soft: #e9edf2;
+  --bg: #f3f5f7; --panel: #ffffff; --ink: #18202b; --sub: #5b6676; --line: #dde3ea; --soft: #e9edf2; --grp: #f5f7fa; --grpline: #b9c3cf;
   --t0: #1f5fbf; --t1: #6f9fd8; --t2: #8a94a3; --t3: #e39a2d; --t4: #d2452f;
   --good: #1f8a5b; --warn: #c27a12; --bad: #c8382b; --accent: #1f5fbf;
   --f-display: 'Gowun Batang', 'Nanum Myeongjo', serif;
@@ -19,11 +19,11 @@
   --f-num: 'IBM Plex Mono', ui-monospace, Consolas, monospace;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
-  --bg: #0f141b; --panel: #161d27; --ink: #e6ebf1; --sub: #9aa6b6; --line: #273141; --soft: #1d2531;
+  --bg: #0f141b; --panel: #161d27; --ink: #e6ebf1; --sub: #9aa6b6; --line: #273141; --soft: #1d2531; --grp: #1a222d; --grpline: #3a4759;
   --t0: #5b95f0; --t1: #8db7ea; --t2: #8f9aab; --t3: #f0b04f; --t4: #f0705a;
   --good: #46c08a; --warn: #e9a53d; --bad: #f0705a; --accent: #6fa3f5; color-scheme: dark } }
 :root[data-theme="dark"] {
-  --bg: #0f141b; --panel: #161d27; --ink: #e6ebf1; --sub: #9aa6b6; --line: #273141; --soft: #1d2531;
+  --bg: #0f141b; --panel: #161d27; --ink: #e6ebf1; --sub: #9aa6b6; --line: #273141; --soft: #1d2531; --grp: #1a222d; --grpline: #3a4759;
   --t0: #5b95f0; --t1: #8db7ea; --t2: #8f9aab; --t3: #f0b04f; --t4: #f0705a;
   --good: #46c08a; --warn: #e9a53d; --bad: #f0705a; --accent: #6fa3f5; color-scheme: dark }
 
@@ -119,6 +119,15 @@ th:first-child, td:first-child { text-align: left; }
 th { font-weight: 600; color: var(--sub); font-size: .78rem; }
 td.num, td .num { font-family: var(--f-num); }
 tr.now td { background: var(--soft); font-weight: 600; }
+/* 묶음 머리 표: 위 줄 = 기간·추세 묶음, 아래 줄 = 평균·오른 비율·일수. 묶음마다 바탕색과 왼쪽 굵은 선 */
+table.gt th.gh { text-align: center; color: var(--ink); font-size: .82rem; border-bottom: 2px solid var(--grpline); padding-bottom: 6px; }
+table.gt th.gh.nowg { color: var(--accent); }
+table.gt .gs { border-left: 2px solid var(--grpline); }
+table.gt td.gb, table.gt th.gb { background: var(--grp); }
+table.gt tr.now td.gb { background: var(--soft); }
+table.gt td.hi { background: var(--soft) !important; font-weight: 700; border-top: 2px solid var(--accent); border-bottom: 2px solid var(--accent); }
+table.gt td.desc { white-space: normal; min-width: 180px; }
+table.gt td.desc .sub { font-size: .78rem; }
 .chip { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
 .pos { color: var(--good); } .neg { color: var(--bad); }
 .cols2 { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
@@ -193,7 +202,7 @@ footer { font-size: .78rem; color: var(--sub); line-height: 1.6; }
         <p class="note" style="margin-top:8px">평균은 그 구간에 있었던 모든 날의 이후 수익률 평균입니다. 하루하루가 겹치므로 실제 독립된 사례 수는 일수보다 훨씬 적습니다.</p>
       </div>
       <div class="panel">
-        <h3 style="font-size:1rem">추세를 같이 볼 때 (60일 뒤)</h3>
+        <h3 style="font-size:1rem">추세를 같이 볼 때 (60일 뒤 코스피)</h3>
         <div class="tbl" id="vs"></div>
         <p class="note" style="margin-top:8px">코스피가 200일 평균선 위인지, 아래라면 200일선이 아직 오르는 중(갓 이탈)인지 함께 내려가는 중(하락 추세)인지로 나눴습니다. 200일선 기울기는 20거래일 전과 비교합니다. 같은 공포라도 하락 추세 안에서는 성적이 나빴습니다.</p>
       </div>
@@ -204,7 +213,7 @@ footer { font-size: .78rem; color: var(--sub); line-height: 1.6; }
       <div id="gvbox" style="margin-top:12px"></div>
     </div>
     <div class="panel">
-      <h3 style="font-size:1rem">묶음별 60일 뒤 코스피 평균</h3>
+      <h3 style="font-size:1rem">묶음 점수별 60일 뒤 코스피</h3>
       <div class="tbl" id="vg"></div>
       <p class="note" style="margin-top:8px">가격·추세 묶음은 뜨거울수록 이후 성적이 좋았습니다(추세가 이어짐). 수급·빚 묶음과 돈·금리·신용 묶음은 양 끝이 모두 나빴습니다. 빚 투자가 과열이거나, 돈줄이 막히는 극단이 위험 신호였습니다.</p>
     </div>
@@ -393,39 +402,62 @@ function renderHist(n) {
   svg.addEventListener('pointerleave', () => { tip.hidden = true; hx.setAttribute('opacity', '0'); });
 }
 
+// 묶음 머리 표: head = 첫 열 이름, groups = [{name, sub:[...], now}], rows = [{label, cls, cells:[[...],[...]], hi:그룹 번호}]
+function gtable(head, groups, rows, extra = null) {
+  const top = `<tr><th rowspan="2">${head}</th>${groups.map((g, k) => `<th class="gh gs${k % 2 ? '' : ' gb'}${g.now ? ' nowg' : ''}" colspan="${g.sub.length}">${g.name}${g.now ? ' ◀ 지금' : ''}</th>`).join('')}${extra ? `<th rowspan="2" class="gs">${extra}</th>` : ''}</tr>`;
+  const sub = `<tr>${groups.map((g, k) => g.sub.map((t, j) => `<th class="${j ? '' : 'gs'}${k % 2 ? '' : ' gb'}">${t}</th>`).join('')).join('')}</tr>`;
+  const body = rows.map(r => `<tr class="${r.cls || ''}"><td${r.desc ? ' class="desc"' : ''}>${r.label}</td>${r.cells.map((cs, k) => cs.map((c, j) => `<td class="num${j ? '' : ' gs'}${k % 2 ? '' : ' gb'}${r.hi === k ? ' hi' : ''}">${c ?? '—'}</td>`).join('')).join('')}${r.extra != null ? `<td class="gs sub num" style="white-space:normal;max-width:210px">${r.extra}</td>` : extra ? '<td class="gs"></td>' : ''}</tr>`).join('');
+  return `<table class="gt"><thead>${top}${sub}</thead><tbody>${body}</tbody></table>`;
+}
+const avgUp = s => s && s.n ? [pc(s.avg), s.up + '%'] : ['—', '—'];
+
 function renderValidation() {
-  const V = S.validation, cur = band(S.total)[2];
+  const V = S.validation, cur = band(S.total)[2], side = S.kospi.trend;
   $('vfrom').textContent = `${V.from} ~ ${S.asOf} 코스피 기준`;
-  const cell = s => s.n ? `<td class="num">${pc(s.avg)}</td><td class="num">${s.up}%</td>` : '<td>—</td><td>—</td>';
-  $('vt').innerHTML = `<table><thead><tr><th>온도 구간</th><th>일수</th><th>20일 뒤</th><th>오른 비율</th><th>60일 뒤</th><th>오른 비율</th><th>120일 뒤</th><th>오른 비율</th></tr></thead><tbody>
-    ${V.buckets.map(b => `<tr class="${b.label === cur ? 'now' : ''}"><td><span class="chip" style="background:${col(b.lo + 1)}"></span>${b.label} <span class="sub num">${b.lo}–${b.hi}</span></td><td class="num">${b.days}</td>${cell(b.f20)}${cell(b.f60)}${cell(b.f120)}</tr>`).join('')}
-    <tr><td>전체 평균</td><td></td><td class="num">${pc(V.base.f20.avg)}</td><td class="num">${V.base.f20.up}%</td><td class="num">${pc(V.base.f60.avg)}</td><td class="num">${V.base.f60.up}%</td><td class="num">${pc(V.base.f120.avg)}</td><td class="num">${V.base.f120.up}%</td></tr></tbody></table>`;
-  const side = S.kospi.trend;
-  $('vs').innerHTML = `<table><thead><tr><th>온도 구간</th>${V.trendSplit.map(t => `<th${t.side === side ? ' style="color:var(--ink)"' : ''}>${t.name}${t.side === side ? ' ◀ 지금' : ''}</th><th>오른 비율</th>`).join('')}</tr></thead><tbody>
-    ${BANDS.map(([, , l]) => `<tr><td>${l}</td>${V.trendSplit.map(t => { const r = t.rows.find(x => x.label === l);
-      return r.n ? `<td class="num" ${l === cur && side === t.side ? 'style="font-weight:700;background:var(--soft)"' : ''}>${pc(r.avg)} <span class="sub">(${r.n}일)</span></td><td class="num">${r.up}%</td>` : '<td class="sub">없음</td><td></td>'; }).join('')}</tr>`).join('')}</tbody></table>
-    <h3 style="font-size:.92rem;margin:14px 0 6px">200일선 아래 + 온도 35 미만을 200일선 기울기로 나누면</h3>
-    <table><thead><tr><th></th><th>일수</th><th>20일 뒤</th><th>60일 뒤</th><th>120일 뒤</th></tr></thead><tbody>
-    ${V.lowSplit.map(x => `<tr${x.side === side ? ' class="now"' : ''}><td>${x.name}${x.side === side ? ' ◀ 지금' : ''}</td><td class="num">${x.f60.n}</td>${['f20', 'f60', 'f120'].map(k => `<td class="num">${pc(x[k].avg)} <span class="sub">${x[k].up}%</span></td>`).join('')}</tr>`).join('')}</tbody></table>
-    <p class="note" style="margin-top:6px">갓 이탈 사례가 있던 달: ${V.lowSplit[0].months.join(' · ')}. 2018년 6~7월처럼 갓 이탈로 시작해 하락 추세로 넘어간 경우도 섞여 있습니다.</p>`;
-  const E = S.events, row = (name, desc, e) => `<tr><td><b>${name}</b><br><span class="sub" style="white-space:normal">${desc}</span></td><td class="num">${e.stats.f20.n}</td>${['f20', 'f60', 'f120'].map(k => e.stats[k].n ? `<td class="num">${pc(e.stats[k].avg)} <span class="sub">${e.stats[k].up}%</span></td>` : '<td>—</td>').join('')}<td class="sub num" style="white-space:normal;max-width:200px">${e.hits.slice(-4).join(' ')}</td></tr>`;
-  $('ev').innerHTML = `<table><thead><tr><th>사건(코스피)</th><th>횟수</th><th>20일 뒤</th><th>60일 뒤</th><th>120일 뒤</th><th>최근 사례</th></tr></thead><tbody>
-    ${row('하루 −3% 급락', '첫 급락일(5거래일 안 반복은 한 번으로)', E.crash)}
-    ${row('극단적 공포 진입', '온도가 20 아래로 들어간 첫날', E.extremeFear)}
-    ${row('공포 뒤 회복', '최근 40일 안에 20 아래였다가 35 위로 올라온 날', E.recover)}
-    ${row('과열 진입', '온도가 80 위로 올라간 첫날', E.hot)}
-    ${row('개인 항복', '지수 하락 + 개인 순매도가 3일 연속', E.capit)}
-    <tr><td>비교: 아무 날</td><td></td>${['f20', 'f60', 'f120'].map(k => `<td class="num">${pc(S.validation.base[k].avg)} <span class="sub">${S.validation.base[k].up}%</span></td>`).join('')}<td></td></tr></tbody></table>
-    <p class="note" style="margin-top:6px">숫자 옆 작은 %는 오른 비율입니다. 횟수가 10번 아래인 줄은 우연의 영향이 큽니다.</p>`;
-  const G = E.gv, gq = (o, b) => ['d10', 'd20', 'd60'].map(k => `<td class="num">${pc(o[k].avg)} <span class="sub">${o[k].up}%</span></td><td class="num sub">${sg(b[k].avg)}% · ${b[k].up}%</td>`).join('');
+  const P3 = [['f20', '20일 뒤'], ['f60', '60일 뒤'], ['f120', '120일 뒤']];
+  const chipLab = (lo, l) => `<span class="chip" style="background:${col(lo + 1)}"></span>${l}`;
+
+  // 1) 온도 구간별
+  $('vt').innerHTML = gtable('온도 구간', [{ name: '해당 날', sub: ['일수'] }, ...P3.map(([, n]) => ({ name: n, sub: ['평균', '오른 비율'] }))], [
+    ...V.buckets.map(b => ({ label: `${chipLab(b.lo, b.label)} <span class="sub num">${b.lo}–${b.hi}</span>`, cls: b.label === cur ? 'now' : '', cells: [[b.days], ...P3.map(([k]) => avgUp(b[k]))] })),
+    { label: '전체 평균', cells: [[''], ...P3.map(([k]) => [pc(V.base[k].avg), V.base[k].up + '%'])] },
+  ]);
+
+  // 2) 온도 × 추세 3상태 (60일 뒤)
+  const vsT = gtable('온도 구간', V.trendSplit.map(t => ({ name: t.name, sub: ['평균', '오른 비율', '일수'], now: t.side === side })),
+    BANDS.map(([lo, , l]) => ({ label: chipLab(lo, l), hi: l === cur ? V.trendSplit.findIndex(t => t.side === side) : null,
+      cells: V.trendSplit.map(t => { const r = t.rows.find(x => x.label === l); return r.n ? [pc(r.avg), r.up + '%', r.n] : ['없음', '', '']; }) })));
+  // 3) 200일선 아래 + 온도 35 미만
+  const lowT = gtable('200일선 아래 + 온도 35 미만', [{ name: '해당 날', sub: ['일수'] }, ...P3.map(([, n]) => ({ name: n, sub: ['평균', '오른 비율'] }))],
+    V.lowSplit.map(x => ({ label: x.name + (x.side === side ? ' <b style="color:var(--accent)">◀ 지금</b>' : ''), cls: x.side === side ? 'now' : '', cells: [[x.f60.n], ...P3.map(([k]) => avgUp(x[k]))] })));
+  $('vs').innerHTML = `${vsT}
+    <h3 style="font-size:.92rem;margin:16px 0 6px">200일선 아래 + 온도 35 미만을 200일선 기울기로 나누면</h3>${lowT}
+    <p class="note" style="margin-top:6px">일수는 조건에 해당한 거래일 수입니다. 한 번의 조정이 여러 날 이어지므로 실제 사례는 훨씬 적습니다. 갓 이탈 사례가 있던 달: ${V.lowSplit[0].months.join(' · ')}. 2018년 6~7월처럼 갓 이탈로 시작해 하락 추세로 넘어간 경우도 섞여 있습니다.</p>`;
+
+  // 4) 사건 검증
+  const E = S.events;
+  const evRow = (name, desc, e) => ({ label: `<b>${name}</b><br><span class="sub">${desc}</span>`, desc: true, cells: [[e.stats.f20.n], ...P3.map(([k]) => avgUp(e.stats[k]))], extra: e.hits.slice(-4).join(' ') });
+  $('ev').innerHTML = gtable('사건(코스피)', [{ name: '사례', sub: ['횟수'] }, ...P3.map(([, n]) => ({ name: n, sub: ['평균', '오른 비율'] }))], [
+    evRow('하루 −3% 급락', '첫 급락일(5거래일 안 반복은 한 번으로)', E.crash),
+    evRow('극단적 공포 진입', '온도가 20 아래로 들어간 첫날', E.extremeFear),
+    evRow('공포 뒤 회복', '최근 40일 안에 20 아래였다가 35 위로 올라온 날', E.recover),
+    evRow('과열 진입', '온도가 80 위로 올라간 첫날', E.hot),
+    evRow('개인 항복', '지수 하락 + 개인 순매도가 3일 연속', E.capit),
+    { label: '비교: 아무 날', cells: [[''], ...P3.map(([k]) => [pc(V.base[k].avg), V.base[k].up + '%'])], extra: '' },
+  ], '최근 사례') + `<p class="note" style="margin-top:6px">횟수가 10번 아래인 줄은 우연의 영향이 큽니다.</p>`;
+
+  // 5) 성장주÷가치주
+  const G = E.gv, D3 = [['d10', '10일 뒤'], ['d20', '20일 뒤'], ['d60', '60일 뒤']];
+  const gvRow = (name, o, b) => ({ label: name, cells: D3.map(([k]) => [pc(o[k].avg), o[k].up + '%', `${sg(b[k].avg)}% · ${b[k].up}%`]) });
   $('gvbox').innerHTML = `<h3 style="font-size:.95rem;margin-bottom:6px">미국 성장주÷가치주(IWF÷IWD) 10일 변화가 −5% 아래로 들어간 첫날</h3>
-    <div class="tbl"><table><thead><tr><th>이후</th><th>10일</th><th>평소</th><th>20일</th><th>평소</th><th>60일</th><th>평소</th></tr></thead><tbody>
-    <tr><td>나스닥100(QQQ)</td>${gq(G.qqq, G.baseQqq)}</tr><tr><td>성장÷가치 비율</td>${gq(G.ratio, G.baseRatio)}</tr></tbody></table></div>
+    <div class="tbl">${gtable('이후 수익률', D3.map(([, n]) => ({ name: n, sub: ['평균', '오른 비율', '평소(평균 · 오른 비율)'] })), [gvRow('나스닥100(QQQ)', G.qqq, G.baseQqq), gvRow('성장÷가치 비율', G.ratio, G.baseRatio)])}</div>
     <div class="evlist">${G.hits.map((h, i) => `<span class="${i === G.hits.length - 1 && h.d >= S.sparkDates[S.sparkDates.length - 5] ? 'last' : ''}">${h.d} ${h.roc}%</span>`).join('')}</div>
-    <p class="note" style="margin-top:8px">2020년 이후 ${G.hits.length}번. 60일 뒤 나스닥100은 평소보다 조금 더 올랐고 오른 비율도 높았습니다. 다만 10~20일 안의 반등은 반반이라, 바로 되돌린다고 보기보다는 한두 달 시계에서 성장주 투매가 지나쳤다는 신호로 보는 편이 자료와 맞습니다.</p>`;
+    <p class="note" style="margin-top:8px">2020년 이후 ${G.hits.length}번. 60일 뒤 나스닥100은 평소보다 조금 더 올랐고 오른 비율도 높았습니다. 다만 10~20일 안의 반등은 반반이라, 바로 되돌린다고 보기보다는 한두 달 시계에서 성장주 투매가 지나쳤다는 신호로 보는 편이 자료와 맞습니다. 코스피는 이 신호 뒤에도 평소와 비슷했습니다.</p>`;
+
+  // 6) 묶음별 (60일 뒤)
   const gk = Object.keys(S.groupsDef);
-  $('vg').innerHTML = `<table><thead><tr><th>묶음 점수</th>${gk.map(k => `<th>${S.groupsDef[k]}</th>`).join('')}</tr></thead><tbody>
-    ${BANDS.map(([lo, , l]) => `<tr><td><span class="chip" style="background:${col(lo + 1)}"></span>${l}</td>${gk.map(k => { const r = V.groups[k].find(x => x.label === l); return r.f60.n ? `<td class="num">${pc(r.f60.avg)} <span class="sub">${r.f60.up}% · ${r.days}일</span></td>` : '<td>—</td>'; }).join('')}</tr>`).join('')}</tbody></table>`;
+  $('vg').innerHTML = gtable('묶음 점수', gk.map(k => ({ name: S.groupsDef[k], sub: ['평균', '오른 비율', '일수'] })),
+    BANDS.map(([lo, , l]) => ({ label: chipLab(lo, l), cells: gk.map(k => { const r = V.groups[k].find(x => x.label === l); return r.f60.n ? [pc(r.f60.avg), r.f60.up + '%', r.days] : ['—', '', '']; }) })));
 }
 
 function renderMarkets() {
