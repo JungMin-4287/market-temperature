@@ -107,7 +107,7 @@ header.top .meta { font-size: .82rem; color: var(--sub); text-align: right; }
 .rng button[aria-pressed="true"] { border-color: var(--ink); font-weight: 600; }
 #hist svg { width: 100%; display: block; }
 #hist text { fill: var(--sub); font-size: 11px; font-family: var(--f-num); }
-@media (max-width:640px){ #hist text { font-size: 12px; } }
+@media (max-width:640px){ #hist text { font-size: 12px; } #hist { margin: 0 -14px; } }
 .legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: .8rem; color: var(--sub); }
 .legend i { display: inline-block; width: 14px; height: 3px; vertical-align: middle; margin-right: 5px; border-radius: 2px; }
 .tipbox { position: absolute; pointer-events: none; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; font-size: .78rem; box-shadow: 0 4px 14px rgba(0,0,0,.12); white-space: nowrap; }
@@ -365,7 +365,7 @@ function renderHist(n) {
   $('rng').onclick = e => { const v = +e.target.dataset.n; if (v) renderHist(v); };
   const cw = $("hist").clientWidth || 1000, mob = cw < 640; histMob = mob;
   // 폰: 화면 폭 그대로 그려 글자가 실제 크기로 보이게(1000폭을 줄이면 글자가 1/3로 작아짐), 높이는 키움
-  const H = S.history.slice(-n), W = mob ? Math.max(cw, 280) : 1000, top = mob ? 240 : 230, gap = 30, bot = mob ? 260 : 260, Ht = top + gap + bot + 22, L = mob ? 50 : 112, R = mob ? 52 : 70;
+  const H = S.history.slice(-n), W = mob ? Math.max(cw, 280) : 1000, top = mob ? 240 : 230, gap = 30, bot = mob ? 260 : 260, Ht = top + gap + bot + 22, L = mob ? 4 : 112, R = mob ? 50 : 70;
   const X = i => L + i / (H.length - 1) * (W - L - R);
   // 코스피는 일반(산술) 눈금: 같은 지수 차이는 같은 간격. 축 끝을 눈금 단위로 반올림해 위아래 눈금이 딱 맞게
   const kv = H.map(r => r[6]), rawLo = Math.min(...kv), rawHi = Math.max(...kv);
@@ -373,11 +373,11 @@ function renderHist(n) {
   const klo = Math.floor(rawLo / step) * step, khi = Math.ceil(rawHi / step) * step;
   const Yk = v => 10 + (khi - v) / (khi - klo) * (top - 20);
   const Yt = s => top + gap + (100 - s) / 100 * bot;
-  let g = '';
-  for (let v = klo; v <= khi + 1e-6; v += step) g += `<line x1="${L}" x2="${W - R}" y1="${Yk(v)}" y2="${Yk(v)}" stroke="var(--soft)"/><text x="${L - 6}" y="${Yk(v) + 4}" text-anchor="end">${v.toLocaleString()}</text>`;
+  let g = '', gl = ''; const halo2 = 'paint-order:stroke;stroke:var(--panel);stroke-width:3px;stroke-linejoin:round';
+  for (let v = klo; v <= khi + 1e-6; v += step) g += `<line x1="${L}" x2="${W - R}" y1="${Yk(v)}" y2="${Yk(v)}" stroke="var(--soft)"/>${mob ? ((gl += `<text x="${L + 2}" y="${Yk(v) - 3}" style="${halo2}">${v.toLocaleString()}</text>`), '') : `<text x="${L - 6}" y="${Yk(v) + 4}" text-anchor="end">${v.toLocaleString()}</text>`}`;
   // 온도 구간 칠하기
   BANDS.forEach(([lo, hi, , c]) => { g += `<rect x="${L}" y="${Yt(Math.min(hi, 100))}" width="${W - L - R}" height="${Yt(lo) - Yt(Math.min(hi, 100))}" fill="var(${c})" opacity=".09"/>`; });
-  [20, 40, 60, 80].forEach(v => g += `<line x1="${L}" x2="${W - R}" y1="${Yt(v)}" y2="${Yt(v)}" stroke="var(--t2)" stroke-opacity=".45" stroke-dasharray="3 4"/><text x="${L - 6}" y="${Yt(v) + 4}" text-anchor="end">${v}</text>`);
+  [20, 40, 60, 80].forEach(v => g += `<line x1="${L}" x2="${W - R}" y1="${Yt(v)}" y2="${Yt(v)}" stroke="var(--t2)" stroke-opacity=".45" stroke-dasharray="3 4"/>${mob ? ((gl += `<text x="${W - R - 3}" y="${Yt(v) - 3}" text-anchor="end" style="${halo2}">${v}</text>`), '') : `<text x="${L - 6}" y="${Yt(v) + 4}" text-anchor="end">${v}</text>`}`);
   // 판정 기준: 구간 이름(띠 안 왼쪽) + '지금 할 일'이 쓰는 35 회복선
   const halo = 'paint-order:stroke;stroke:var(--panel);stroke-width:3px;stroke-linejoin:round';
   // 구간 이름은 왼쪽 여백(띠 가운데 높이), 경계 숫자는 경계 높이 — 온도선과 겹치지 않게 차트 밖에
@@ -400,7 +400,7 @@ function renderHist(n) {
   g += nowLine(Yk(last[6]), 'var(--ink)', last[6].toLocaleString(undefined, { maximumFractionDigits: 0 }));
   if (last[1] != null) g += nowLine(Yt(last[1]), 'var(--bad)', f1(last[1]));
   g += `<path d="${kp}" fill="none" stroke="var(--ink)" stroke-width="1.4"/>`;
-  g += `<path d="${tp}" fill="none" stroke="var(--accent)" stroke-width="1.4"/>`;
+  g += `<path d="${tp}" fill="none" stroke="var(--accent)" stroke-width="1.4"/>`; g += gl;
   g += `<circle cx="${X(H.length - 1)}" cy="${Yt(last[1])}" r="3.5" fill="${col(last[1])}" stroke="var(--panel)" stroke-width="1.5"/>`;
   g += `<text x="${L}" y="${top + gap - 8}" style="fill:var(--ink);font-family:var(--f-body);font-size:12px;font-weight:600">시장 온도</text>`;
   g += `<line id="hx" x1="0" x2="0" y1="10" y2="${top + gap + bot}" stroke="var(--sub)" stroke-width="1" opacity="0"/>`;
