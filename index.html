@@ -186,7 +186,7 @@ footer { font-size: .78rem; color: var(--sub); line-height: 1.6; }
     <h2>온도와 코스피 <small>온도가 어디서 꺾였고 지수는 어떻게 움직였나</small></h2>
     <div class="panel" style="position:relative">
       <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center">
-        <div class="legend"><span><i style="background:var(--ink)"></i>코스피(로그 눈금)</span><span><i style="background:var(--accent)"></i>시장 온도</span><span><i style="background:var(--t2);opacity:.5"></i>20·40·60·80 구간 경계</span><span><i style="background:var(--accent);height:2px"></i>회복 35 — 공포 뒤 이 위로 올라오면 매수를 늘릴 신호</span><span><i style="background:var(--bad)"></i>지금 위치</span></div>
+        <div class="legend"><span><i style="background:var(--ink)"></i>코스피</span><span><i style="background:var(--accent)"></i>시장 온도</span><span><i style="background:var(--t2);opacity:.5"></i>20·40·60·80 구간 경계</span><span><i style="background:var(--accent);height:2px"></i>회복 35 — 공포 뒤 이 위로 올라오면 매수를 늘릴 신호</span><span><i style="background:var(--bad)"></i>지금 위치</span></div>
         <div class="rng" id="rng"></div>
       </div>
       <div id="hist"></div>
@@ -362,13 +362,14 @@ function renderHist(n) {
   $('rng').onclick = e => { const v = +e.target.dataset.n; if (v) renderHist(v); };
   const H = S.history.slice(-n), W = 1000, top = 230, gap = 30, bot = 260, Ht = top + gap + bot + 22, L = 112, R = 70;
   const X = i => L + i / (H.length - 1) * (W - L - R);
-  const ks = H.map(r => Math.log(r[6])), klo = Math.min(...ks), khi = Math.max(...ks);
-  const Yk = v => 10 + (khi - Math.log(v)) / (khi - klo) * (top - 20);
+  // 코스피는 일반(산술) 눈금: 같은 지수 차이는 같은 간격. 축 끝을 눈금 단위로 반올림해 위아래 눈금이 딱 맞게
+  const kv = H.map(r => r[6]), rawLo = Math.min(...kv), rawHi = Math.max(...kv);
+  const step = [100, 200, 250, 500, 1000, 2000].find(s => (rawHi - rawLo) / s <= 7) || 2000;
+  const klo = Math.floor(rawLo / step) * step, khi = Math.ceil(rawHi / step) * step;
+  const Yk = v => 10 + (khi - v) / (khi - klo) * (top - 20);
   const Yt = s => top + gap + (100 - s) / 100 * bot;
   let g = '';
-  // 코스피 눈금
-  const kmin = Math.exp(klo), kmax = Math.exp(khi), step = [200, 500, 1000, 2000][[200, 500, 1000, 2000].findIndex(s => (kmax - kmin) / s < 7)] || 2000;
-  for (let v = Math.ceil(kmin / step) * step; v <= kmax; v += step) g += `<line x1="${L}" x2="${W - R}" y1="${Yk(v)}" y2="${Yk(v)}" stroke="var(--soft)"/><text x="${L - 6}" y="${Yk(v) + 4}" text-anchor="end">${v.toLocaleString()}</text>`;
+  for (let v = klo; v <= khi + 1e-6; v += step) g += `<line x1="${L}" x2="${W - R}" y1="${Yk(v)}" y2="${Yk(v)}" stroke="var(--soft)"/><text x="${L - 6}" y="${Yk(v) + 4}" text-anchor="end">${v.toLocaleString()}</text>`;
   // 온도 구간 칠하기
   BANDS.forEach(([lo, hi, , c]) => { g += `<rect x="${L}" y="${Yt(Math.min(hi, 100))}" width="${W - L - R}" height="${Yt(lo) - Yt(Math.min(hi, 100))}" fill="var(${c})" opacity=".09"/>`; });
   [20, 40, 60, 80].forEach(v => g += `<line x1="${L}" x2="${W - R}" y1="${Yt(v)}" y2="${Yt(v)}" stroke="var(--t2)" stroke-opacity=".45" stroke-dasharray="3 4"/><text x="${L - 6}" y="${Yt(v) + 4}" text-anchor="end">${v}</text>`);
