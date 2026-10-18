@@ -107,6 +107,7 @@ header.top .meta { font-size: .82rem; color: var(--sub); text-align: right; }
 .rng button[aria-pressed="true"] { border-color: var(--ink); font-weight: 600; }
 #hist svg { width: 100%; display: block; }
 #hist text { fill: var(--sub); font-size: 11px; font-family: var(--f-num); }
+@media (max-width:640px){ #hist text { font-size: 12px; } }
 .legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: .8rem; color: var(--sub); }
 .legend i { display: inline-block; width: 14px; height: 3px; vertical-align: middle; margin-right: 5px; border-radius: 2px; }
 .tipbox { position: absolute; pointer-events: none; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; font-size: .78rem; box-shadow: 0 4px 14px rgba(0,0,0,.12); white-space: nowrap; }
@@ -356,11 +357,15 @@ function renderInds(k) {
 }
 
 let histN = 756;
+let histMob = null;
+window.addEventListener("resize", () => { const m = ($("hist")?.clientWidth || 1000) < 640; if (histMob !== null && (m || m !== histMob)) { clearTimeout(window._hr); window._hr = setTimeout(() => renderHist(histN), 150); } });
 function renderHist(n) {
   histN = n;
   $('rng').innerHTML = [[252, '1년'], [756, '3년'], [99999, '전체']].map(([v, l]) => `<button type="button" data-n="${v}" aria-pressed="${v === n}">${l}</button>`).join('');
   $('rng').onclick = e => { const v = +e.target.dataset.n; if (v) renderHist(v); };
-  const H = S.history.slice(-n), W = 1000, top = 230, gap = 30, bot = 260, Ht = top + gap + bot + 22, L = 112, R = 70;
+  const cw = $("hist").clientWidth || 1000, mob = cw < 640; histMob = mob;
+  // 폰: 화면 폭 그대로 그려 글자가 실제 크기로 보이게(1000폭을 줄이면 글자가 1/3로 작아짐), 높이는 키움
+  const H = S.history.slice(-n), W = mob ? Math.max(cw, 280) : 1000, top = mob ? 240 : 230, gap = 30, bot = mob ? 260 : 260, Ht = top + gap + bot + 22, L = mob ? 50 : 112, R = mob ? 52 : 70;
   const X = i => L + i / (H.length - 1) * (W - L - R);
   // 코스피는 일반(산술) 눈금: 같은 지수 차이는 같은 간격. 축 끝을 눈금 단위로 반올림해 위아래 눈금이 딱 맞게
   const kv = H.map(r => r[6]), rawLo = Math.min(...kv), rawHi = Math.max(...kv);
@@ -376,7 +381,7 @@ function renderHist(n) {
   // 판정 기준: 구간 이름(띠 안 왼쪽) + '지금 할 일'이 쓰는 35 회복선
   const halo = 'paint-order:stroke;stroke:var(--panel);stroke-width:3px;stroke-linejoin:round';
   // 구간 이름은 왼쪽 여백(띠 가운데 높이), 경계 숫자는 경계 높이 — 온도선과 겹치지 않게 차트 밖에
-  BANDS.forEach(([lo, hi, name, c]) => { const yc = (Yt(lo) + Yt(Math.min(hi, 100))) / 2; g += `<text x="${L - 34}" y="${yc + 4}" text-anchor="end" style="fill:var(${c});font-family:var(--f-body);font-size:12px;font-weight:700">${name}</text>`; });
+  BANDS.forEach(([lo, hi, name, c]) => { const yc = (Yt(lo) + Yt(Math.min(hi, 100))) / 2; g += `<text x="${mob ? L + 4 : L - 34}" y="${yc + 4}" text-anchor="${mob ? "start" : "end"}" style="fill:var(${c});font-family:var(--f-body);font-size:12px;font-weight:700${mob ? ";" + halo : ""}">${name}</text>`; });
   const lastT = H[H.length - 1][1];
   const t35 = lastT != null && Math.abs(Yt(lastT) - Yt(35)) < 20 ? (lastT < 35 ? -12 : 12) : 0; // 지금 값표와 겹치면 비켜 놓기
   g += `<line x1="${L}" x2="${W - R}" y1="${Yt(35)}" y2="${Yt(35)}" stroke="var(--accent)" stroke-width="1.3" stroke-dasharray="2 3"/>
